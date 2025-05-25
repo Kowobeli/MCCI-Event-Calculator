@@ -1,5 +1,5 @@
 # MCCI_Event_Calculator
-Tool to calculate MCCI plobby tournaments.
+Tool created to calculate scoring for MCCI plobby tournaments.
 
 ## Description
 The MCCI Event Calculator is a tool for mcci plobby tournament hosts, as a way of making the whole process of calculating the team score and individual score easier!
