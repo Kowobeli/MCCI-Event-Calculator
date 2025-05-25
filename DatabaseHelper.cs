@@ -1,6 +1,7 @@
+using System;
+using System.Data;
 using System.Data.SQLite;
 using System.Windows.Forms;
-using System.Data;
 
 public class DatabaseHelper
 {
@@ -11,13 +12,26 @@ public class DatabaseHelper
         using (var conn = new SQLiteConnection(dbPath))
         {
             conn.Open();
-            string sql = "CREATE TABLE IF NOT EXISTS Teams (Id INTEGER PRIMARY KEY, Name TEXT NOT NULL, Points INT NOT NULL)";
+            string sql = "CREATE TABLE IF NOT EXISTS Teams (Id INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT NOT NULL, TotalPoints INT DEFAULT 0, BbPoints INT DEFAULT 0, HitwPoints INT DEFAULT 0," +
+                "PkwsPoints INT DEFAULT 0, RsrPoints INT DEFAULT 0, SbPoints INT DEFAULT 0, TgttosPoints INT DEFAULT 0)";
             using (var cmd = new SQLiteCommand(sql, conn))
             {
                 cmd.ExecuteNonQuery();
             }
 
-            sql = "CREATE TABLE IF NOT EXISTS Members (Id INTEGER PRIMARY KEY, Name TEXT NOT NULL, Team TEXT NOT NULL, Points INT NOT NULL)";
+            sql = @"CREATE TABLE IF NOT EXISTS Members (
+                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        Name TEXT NOT NULL,
+                        TeamName TEXT NOT NULL,
+                        Points INT DEFAULT 0,
+                        BbPoints INT DEFAULT 0,
+                        HitwPoints INT DEFAULT 0,
+                        PkwsPoints INT DEFAULT 0,
+                        RsrPoints INT DEFAULT 0,
+                        SbPoints INT DEFAULT 0,
+                        TgttosPoints INT DEFAULT 0,
+                        FOREIGN KEY (TeamName) REFERENCES Teams(Name)
+                    )";
             using (var cmd = new SQLiteCommand(sql, conn))
             {
                 cmd.ExecuteNonQuery();
@@ -25,45 +39,51 @@ public class DatabaseHelper
         }
     }
 
-    public void Save(string memberName, string teamName, int teamPoints, int memberPoints)
+    public int ExecuteCommands(string sql)
     {
         using (var conn = new SQLiteConnection(dbPath))
         {
-            conn.Open();
-
-
-            string teamSql = "INSERT INTO Teams (Name, Color, Points) VALUES (@teamName, @teamPoints)";
-            using (var teamCmd = new SQLiteCommand(teamSql, conn))
+            try
             {
-                teamCmd.Parameters.AddWithValue("@teamName", teamName);
-                teamCmd.Parameters.AddWithValue("@teamPoints", teamPoints);
-                teamCmd.ExecuteNonQuery();
+                conn.Open();
+                using (var cmd = new SQLiteCommand(sql, conn))
+                {
+                    cmd.ExecuteNonQuery();
+                }
+                return 1;
             }
-
-
-            string memberSql = "INSERT INTO Members (Name, Team, Points) VALUES (@memberName, @teamName, @memberPoints)";
-            using (var memberCmd = new SQLiteCommand(memberSql, conn))
+            catch (Exception)
             {
-                memberCmd.Parameters.AddWithValue("@memberName", memberName);
-                memberCmd.Parameters.AddWithValue("@teamName", teamName);
-                memberCmd.Parameters.AddWithValue("@memberPoints", memberPoints);
-                memberCmd.ExecuteNonQuery();
+                return 0;
+            }
+            finally
+            {
+                conn.Close();
             }
         }
     }
 
-    public DataTable GetAllMembers()
+    public DataTable ExecuteConsults(string sql)
     {
         using (var conn = new SQLiteConnection(dbPath))
         {
-            conn.Open();
-            string sql = "SELECT Id, Name, Team, Points FROM Members";
-            using (var cmd = new SQLiteCommand(sql, conn))
-            using (var adapter = new SQLiteDataAdapter(cmd))
+            try
             {
-                DataTable dt = new DataTable();
-                adapter.Fill(dt);
-                return dt;
+                conn.Open();
+                using (var da = new SQLiteDataAdapter(sql, conn))
+                {
+                    DataTable dt = new DataTable();
+                    da.Fill(dt);
+                    return dt;
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                conn.Close();
             }
         }
     }

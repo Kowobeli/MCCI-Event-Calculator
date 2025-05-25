@@ -1,4 +1,6 @@
 ﻿using MCCI_Event_Calculator.Games;
+using MCCI_Event_Calculator.Team_and_Members;
+using MCCI_Event_Calculator.Teams_and_Members;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -89,6 +91,55 @@ namespace MCCI_Event_Calculator
         private void btnTgttos_Click(object sender, EventArgs e)
         {
             SwitchToAnotherFormTgttos();
+        }
+
+        private void btnBack_Click(object sender, EventArgs e)
+        {
+            SwitchToAnotherForm();
+        }
+
+
+        private void SwitchToAnotherForm()
+        {
+            var otherForm = new membersWindow();
+            otherForm.Show();
+            this.Hide();
+        }
+
+        private void btnResults_Click(object sender, EventArgs e)
+        {
+            SwitchToAnotherFormResults();
+        }
+
+        private void SwitchToAnotherFormResults()
+        {
+            var otherForm = new resultsWindow();
+            otherForm.Show();
+            this.Hide();
+        }
+
+        private void mainScreen_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnTeams_Click(object sender, EventArgs e)
+        {
+            var otherForm = new teamsWindow();
+            otherForm.Show();
+            this.Hide();
+        }
+
+        private void btnMembers_Click(object sender, EventArgs e)
+        {
+            var otherForm = new membersWindow();
+            otherForm.Show();
+            this.Hide();
+        }
+
+        private void btnBack_Paint(object sender, PaintEventArgs e)
+        {
+
         }
     }
 }

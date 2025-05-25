@@ -12,6 +12,9 @@ namespace MCCI_Event_Calculator.Games
 {
     public partial class tgttosWindow : Form
     {
+        DatabaseHelper db = new DatabaseHelper();
+        string tableMembers = "Members";
+        string tableTeams = "Teams";
         public tgttosWindow()
         {
             InitializeComponent();
@@ -27,6 +30,123 @@ namespace MCCI_Event_Calculator.Games
             var otherForm = new mainScreen();
             otherForm.Show();
             this.Hide();
+        }
+
+        public void ShowData()
+        {
+            string showMembers = $"SELECT * FROM {tableMembers}";
+            string showTeams = $"SELECT * FROM {tableTeams}";
+            DataTable dtMembers = db.ExecuteConsults(showMembers);
+            DataTable dtTeams = db.ExecuteConsults(showTeams);
+            dtgTgttos.DataSource = dtMembers.AsDataView();
+            dtgTeams.DataSource = dtTeams.AsDataView();
+        }
+
+        public void ClearFields()
+        {
+            txtPointsPerRound.Clear();
+            txtMultiplier.Clear();
+        }
+
+        private void tgttosWindow_Load(object sender, EventArgs e)
+        {
+            ShowData();
+        }
+
+        private void btnInsert_Click(object sender, EventArgs e)
+        {
+            string multiply = txtMultiplier.Text;
+
+            int totalPointsRounds = 0;
+            var lines = txtPointsPerRound.Lines;
+
+            foreach (var line in lines)
+            {
+                if (int.TryParse(line.Trim(), out int value))
+                {
+                    totalPointsRounds += value;
+                }
+            }
+
+            int totalPointsRounded = 0;
+            string id = lblId.Text;
+
+            if (float.TryParse(multiply, out float multiplyValue))
+            {
+                float totalPoints = totalPointsRounds * multiplyValue;
+                totalPointsRounded = (int)Math.Round(totalPoints, 0);
+            }
+            else
+            {
+                MessageBox.Show("Please enter valid numeric values for Points, Rounds, and Multiplier.");
+                return;
+            }
+
+            if (id != "")
+            {
+                string updateMembersTgttos = $"UPDATE {tableMembers} SET TgttosPoints = TgttosPoints + {totalPointsRounded} WHERE id = {id}";
+                string updateMembersAllPoints = $"UPDATE {tableMembers} SET Points = Points + {totalPointsRounded} WHERE id = {id}";
+                string updateTeamsTgttos = $@"UPDATE {tableTeams} SET TgttosPoints = COALESCE(TgttosPoints, 0) + {totalPointsRounded} WHERE Name = (SELECT TeamName FROM Members WHERE Id = {id} LIMIT 1)";
+                string updateTeamsAllPoints = $"UPDATE {tableTeams} SET TotalPoints = COALESCE(TotalPoints, 0) + {totalPointsRounded} WHERE Name = (SELECT TeamName FROM Members WHERE Id = {id} LIMIT 1)";
+                int resultado = db.ExecuteCommands(updateMembersTgttos);
+                int resultado2 = db.ExecuteCommands(updateMembersAllPoints);
+                int resultado3 = db.ExecuteCommands(updateTeamsTgttos);
+                int resultado4 = db.ExecuteCommands(updateTeamsAllPoints);
+
+                if (resultado == 1 & resultado2 == 1 & resultado3 == 1 & resultado4 == 1)
+                {
+                    MessageBox.Show("Data updated sucessfully!");
+                    ClearFields();
+                    ShowData();
+                }
+                else
+                {
+                    MessageBox.Show("Update failed!");
+                }
+
+            }
+            else
+            {
+                MessageBox.Show("Invalid data!");
+            }
+        }
+
+        private void btnRefresh_Click(object sender, EventArgs e)
+        {
+            ShowData();
+        }
+
+        private void dtgTgttos_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            lblId.Text = dtgTgttos.Rows[e.RowIndex].Cells[0].Value.ToString();
+        }
+
+        private void label2_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void txtPointsPerRound_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void txtPointsPerRound_Click(object sender, EventArgs e)
+        {
+            txtPointsPerRound.ScrollBars = ScrollBars.Vertical;
+            txtPointsPerRound.Height = 50;
+        }
+
+        private void txtPointsPerRound_Leave(object sender, EventArgs e)
+        {
+            txtPointsPerRound.ScrollBars = ScrollBars.None;
+            txtPointsPerRound.Height = 20;
+        }
+
+        private void tgttosWindow_Click(object sender, EventArgs e)
+        {
+            txtPointsPerRound.ScrollBars = ScrollBars.None;
+            txtPointsPerRound.Height = 20;
         }
     }
 }

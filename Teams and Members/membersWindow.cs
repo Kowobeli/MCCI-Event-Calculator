@@ -1,4 +1,6 @@
-﻿using System;
+﻿using MCCI_Event_Calculator.Team_and_Members;
+using Org.BouncyCastle.Asn1.Ocsp;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -7,11 +9,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace MCCI_Event_Calculator.Teams_and_Members
 {
     public partial class membersWindow : Form
     {
+        DatabaseHelper db = new DatabaseHelper();
+        string table = "Members";
         public membersWindow()
         {
             InitializeComponent();
@@ -19,8 +24,8 @@ namespace MCCI_Event_Calculator.Teams_and_Members
 
         private void membersWindow_Load(object sender, EventArgs e)
         {
-            DatabaseHelper db = new DatabaseHelper();
-            dtgMembers.DataSource = db.GetAllMembers();
+            ShowData();
+            FillTeamsComboBox();
         }
 
         private void btnBack_Click(object sender, EventArgs e)
@@ -30,14 +35,143 @@ namespace MCCI_Event_Calculator.Teams_and_Members
 
         private void SwitchToMainScreen()
         {
-            var otherForm = new inputScreen();
+            var otherForm = new teamsWindow();
             otherForm.Show();
             this.Hide();
+        }
+
+        public void ClearFields()
+        {
+            txtMember.Clear();
+            cbTeam.SelectedIndex = -1;
+        }
+
+        public void ShowData()
+        {
+            string show = $"SELECT * FROM {table}";
+            DataTable dt = db.ExecuteConsults(show);
+            dtgMembers.DataSource = dt.AsDataView();
         }
 
         private void dtgMembers_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
 
+        }
+
+        private void btnSave_Click(object sender, EventArgs e)
+        {
+            string team = cbTeam.Text;
+            string member = txtMember.Text;
+
+            if (team != "" & member != "")
+            {
+                string insert = $"INSERT INTO {table} (Name, TeamName) VALUES ('{member}', '{team}')";
+                int resultado = db.ExecuteCommands(insert);
+                if (resultado == 1)
+                {
+                    MessageBox.Show("Data inserted sucessfully!");
+                    ClearFields();
+                    ShowData();
+                }
+                else
+                {
+                    MessageBox.Show("An error occurred while inserting the data!");
+                }
+
+            }
+            else
+            {
+                MessageBox.Show("Invalid data!");
+            }
+        }
+
+        private void btnDelete_Click(object sender, EventArgs e)
+        {
+            string id = lblId.Text;
+
+            string delete = $"DELETE FROM {table} WHERE Id = {id}";
+            if (id != "")
+            {
+                int resultado = db.ExecuteCommands(delete);
+                if (resultado == 1)
+                {
+                    MessageBox.Show("Data deleted sucessfully!");
+                    ClearFields();
+                    ShowData();
+                }
+                else
+                {
+                    MessageBox.Show("Delete failed!");
+                }
+            }
+            else
+            {
+                MessageBox.Show("Teams name not identified!");
+            }
+        }
+
+        private void dtgMembers_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            lblId.Text = dtgMembers.Rows[e.RowIndex].Cells[0].Value.ToString();
+            txtMember.Text = dtgMembers.Rows[e.RowIndex].Cells[1].Value.ToString();
+            cbTeam.Text = dtgMembers.Rows[e.RowIndex].Cells[2].Value.ToString();
+
+        }
+
+        private void btnSearch_Click(object sender, EventArgs e)
+        {
+            ShowData();
+        }
+
+        private void btnUpdate_Click(object sender, EventArgs e)
+        {
+            string team = cbTeam.Text;
+            string id = lblId.Text;
+            string member = txtMember.Text;
+
+            if (id != "")
+            {
+                string update = $"UPDATE {table} SET Name = '{member}'. TeamName = '{team}' WHERE id = {id}";
+                int resultado = db.ExecuteCommands(update);
+                if (resultado == 1)
+                {
+                    MessageBox.Show("Data updated sucessfully!");
+                    ClearFields();
+                    ShowData();
+                }
+                else
+                {
+                    MessageBox.Show("Update failed!");
+                }
+
+            }
+            else
+            {
+                MessageBox.Show("Invalid data!");
+            }
+        }
+
+        private void btnAdvance_Click(object sender, EventArgs e)
+        {
+            SwitchToAnotherForm();
+        }
+
+        private void SwitchToAnotherForm()
+        {
+            var otherForm = new mainScreen();
+            otherForm.Show();
+            this.Hide();
+        }
+
+        private void FillTeamsComboBox()
+        {
+            string sql = "SELECT Name FROM Teams";
+            DataTable dt = db.ExecuteConsults(sql);
+            cbTeam.Items.Clear();
+            foreach (DataRow row in dt.Rows)
+            {
+                cbTeam.Items.Add(row["Name"].ToString());
+            }
         }
     }
 }
