@@ -10,3 +10,5 @@ At the end you're gonna have a leaderboard for both the teams, and the individua
 
 > [!Note]
 > When adding the points, each line represents a round.
+
+![janelinha](https://github.com/user-attachments/assets/58770875-40de-43a1-8bcf-f6e9b93dd24c)
